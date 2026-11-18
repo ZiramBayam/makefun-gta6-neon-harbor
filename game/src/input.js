@@ -1,53 +1,89 @@
-// Keyboard and pointer input. Held keys give a steering direction; one-shot presses (start or
-// restart, pause) are queued as bit flags and taken once by the loop, so a press between two
-// frames is never lost and never counted twice.
+// Keyboard and pointer input. Held keys give a movement axis; one-shot presses and clicks are
+// queued and taken once by the loop, so a press between two frames is never lost or counted twice.
+// Pointer positions are converted through the renderer into the fixed 1280x720 logical view.
 
-export const ACTION_CONFIRM = 1;
-export const ACTION_PAUSE = 2;
+const HELD = new Set([
+  'KeyW', 'ArrowUp', 'KeyS', 'ArrowDown', 'KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight',
+  'ShiftLeft', 'ShiftRight', 'KeyF',
+]);
+const PRESSED = new Set([
+  'Enter', 'Space', 'KeyP', 'Escape', 'KeyM', 'KeyR', 'KeyH', 'KeyE', 'KeyJ',
+  'F2', 'F3',
+]);
 
-const LEFT = new Set(['ArrowLeft', 'KeyA']);
-const RIGHT = new Set(['ArrowRight', 'KeyD']);
-const CONFIRM = new Set(['Space', 'Enter']);
-const PAUSE = new Set(['KeyP', 'Escape']);
+export function createInput(renderer) {
+  const held = new Set();
+  const presses = [];
+  const clicks = [];
+  const mouse = { x: 0, y: 0, down: false };
 
-export function createInput(target) {
-  let left = false;
-  let right = false;
-  let actions = 0;
+  function move(event) {
+    const point = renderer.screenToLogical(event.clientX, event.clientY);
+    mouse.x = point.x;
+    mouse.y = point.y;
+  }
 
   window.addEventListener('keydown', (event) => {
-    if (LEFT.has(event.code)) left = true;
-    else if (RIGHT.has(event.code)) right = true;
-    else if (CONFIRM.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_CONFIRM;
-    } else if (PAUSE.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_PAUSE;
-    } else return;
-    event.preventDefault();
+    if (HELD.has(event.code)) {
+      held.add(event.code);
+      event.preventDefault();
+    } else if (PRESSED.has(event.code)) {
+      if (!event.repeat) presses.push(event.code);
+      event.preventDefault();
+    }
   });
   window.addEventListener('keyup', (event) => {
-    if (LEFT.has(event.code)) left = false;
-    else if (RIGHT.has(event.code)) right = false;
+    held.delete(event.code);
   });
-  // A key released while the tab is hidden never sends keyup: let go of everything on blur.
   window.addEventListener('blur', () => {
-    left = false;
-    right = false;
+    held.clear();
+    presses.length = 0;
+    clicks.length = 0;
+    mouse.down = false;
   });
-  target.addEventListener('pointerdown', () => {
-    actions |= ACTION_CONFIRM;
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerdown', (event) => {
+    move(event);
+    if (event.button === 0) {
+      mouse.down = true;
+      clicks.push({ x: mouse.x, y: mouse.y });
+    }
+    event.preventDefault();
   });
+  window.addEventListener('pointerup', (event) => {
+    if (event.button === 0) mouse.down = false;
+  });
+  window.addEventListener('contextmenu', (event) => event.preventDefault());
 
   return {
-    /** -1 for left, 1 for right, 0 for neither or both. */
-    direction() {
-      return (right ? 1 : 0) - (left ? 1 : 0);
+    mouse,
+    axis() {
+      const x = (held.has('KeyD') || held.has('ArrowRight') ? 1 : 0)
+        - (held.has('KeyA') || held.has('ArrowLeft') ? 1 : 0);
+      const y = (held.has('KeyS') || held.has('ArrowDown') ? 1 : 0)
+        - (held.has('KeyW') || held.has('ArrowUp') ? 1 : 0);
+      return {
+        x,
+        y,
+        sprint: held.has('ShiftLeft') || held.has('ShiftRight'),
+        handbrake: held.has('KeyF'),
+      };
     },
-    /** The one-shot presses since the last call, as ACTION_* flags. */
-    takeActions() {
-      const taken = actions;
-      actions = 0;
+    takePresses() {
+      const taken = presses.slice();
+      presses.length = 0;
       return taken;
+    },
+    takeClicks() {
+      const taken = clicks.slice();
+      clicks.length = 0;
+      return taken;
+    },
+    clear() {
+      held.clear();
+      presses.length = 0;
+      clicks.length = 0;
+      mouse.down = false;
     },
   };
 }

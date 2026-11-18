@@ -1,61 +1,96 @@
-// Every tuning number and colour in one place. The playfield is a fixed 1280x720 logical area;
-// the renderer scales it to the window, so no rule below depends on the screen size.
+// Neon Harbor: every tuning number, colour and mission brief lives here. The renderer works in a
+// fixed 1280x720 logical view; the simulation is a fixed 1/60 second step whatever the display does.
 
-export const FIELD = { width: 1280, height: 720, groundY: 664 };
-
-/** The simulation's fixed step, in seconds: 60 updates a second whatever the display's rate. */
+export const VIEW = { width: 1280, height: 720 };
 export const STEP = 1 / 60;
+/** One deterministic city for every visit; ?seed=N overrides it for experiments. */
+export const DEFAULT_SEED = 0x4e484252; // "NHBR"
+
+export const WORLD = {
+  width: 5760,
+  height: 4480,
+  cell: 320, // a block plus one road, repeated across the map
+  road: 88,
+};
 
 export const PLAYER = {
-  width: 72,
-  height: 24,
-  speed: 560,
-  invulnerable: 1.5,
+  radius: 13,
+  walk: 215,
+  sprint: 1.65,
+  hp: 100,
+  armor: 100,
+  ammo: 36,
+  fireDelay: 0.16,
+  meleeDelay: 0.42,
+  meleeRange: 54,
+  respawnCost: 200,
 };
 
-export const LIVES = 3;
-
-export const BLOCK = {
-  minWidth: 40,
-  maxWidth: 110,
-  height: 36,
-  speed: 240,
-  speedPerLevel: 30,
-  speedJitter: 90,
-  interval: 0.55,
-  intervalScale: 0.88,
-  minInterval: 0.14,
-  dodgePoints: 1,
+export const CAR = {
+  maxSpeed: 360,
+  policeSpeed: 330,
+  trafficSpeed: 150,
+  vanSpeed: 300,
+  accel: 280,
+  brake: 440,
+  friction: 140,
+  turn: 2.9,
+  radius: 23,
+  health: 100,
 };
 
-export const COIN = {
-  size: 24,
-  speed: 190,
-  speedPerLevel: 14,
-  interval: 1.4,
-  intervalJitter: 0.8,
-  points: 10,
-};
+export const WANTED = { max: 5, decay: 24 };
 
-/** Seconds of play per level, and the last level: speeds and spawn rates stop growing there. */
-export const LEVEL = { seconds: 12, max: 12 };
-
-/** How many falling things can exist at once; the pool is allocated once, at boot. */
-export const POOL_SIZE = 64;
+export const MISSIONS = [
+  {
+    title: 'Courier Run',
+    speaker: 'Vera',
+    brief: 'The package is at the Neon Row depot. Take it to Skyline Plaza, and keep off the main road.',
+    reward: 250,
+  },
+  {
+    title: 'Harbor Job',
+    speaker: 'Vera',
+    brief: 'A white van is waiting on Pier 7. Steal it and park it in the Old Town garage.',
+    reward: 500,
+  },
+  {
+    title: 'The Runner',
+    speaker: 'Milo',
+    brief: 'He is loose near Aurora Park. Find the runner and bring him down before he reaches the docks.',
+    reward: 750,
+  },
+  {
+    title: 'Plaza Standoff',
+    speaker: 'Vera',
+    brief: 'Four of them are holding Skyline Plaza. Clear them out, then meet me at the fountain.',
+    reward: 1500,
+  },
+];
 
 export const PALETTE = {
-  backdrop: '#11141b',
-  sky: '#1b1f2a',
-  ground: '#2a3040',
-  player: '#4fc3f7',
-  block: '#e5534b',
-  coin: '#f2c94c',
-  panel: '#252b38',
-  text: '#eef1f5',
-  muted: '#8b93a3',
+  backdrop: '#070912',
+  asphalt: '#121725',
+  road: '#1b2233',
+  lane: '#3a4761',
+  sidewalk: '#283148',
+  water: '#0b2540',
+  waterLine: '#155078',
+  park: '#14342e',
+  tree: '#2c7a5b',
+  building: '#1d2440',
+  buildingAlt: '#272246',
+  neonPink: '#ff4fa3',
+  neonCyan: '#48e6ff',
+  neonGold: '#ffd45e',
+  neonGreen: '#5dffb0',
+  policeRed: '#ff4d5e',
+  policeBlue: '#4c7cff',
+  text: '#eaf3ff',
+  muted: '#8494b0',
+  panel: 'rgba(9, 14, 28, 0.86)',
 };
 
 export const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
-
-/** Where the best score is kept between visits (this browser only). */
-export const BEST_KEY = 'block-dodger.best';
+/** The only key this game touches in browser storage. */
+export const SAVE_KEY = 'neon-harbor.save.v1';

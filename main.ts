@@ -17,6 +17,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
+// NEON HARBOR — authored by the recorded build agent. The entire open world lives in game/.
+const ENTRY_GAME_TITLE = 'Neon Harbor';
+console.log(`${ENTRY_GAME_TITLE}: packaging static game and screenshots.`);
+
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 

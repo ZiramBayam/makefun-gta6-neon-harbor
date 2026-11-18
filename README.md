@@ -6,6 +6,8 @@
 
 Neon Harbor is an original offline open-world crime game that runs in a desktop browser from its own static files: a hand-built city, traffic, pedestrians, car theft, police chases, missions, combat, a HUD with a minimap, and a save system.
 
+The finished game follows a courier through four linked jobs across eight neon districts, with five wanted levels, procedural WebAudio music and a localStorage save/continue system.
+
 ## Run it
 
 ```sh
